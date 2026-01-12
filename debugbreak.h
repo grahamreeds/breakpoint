@@ -28,7 +28,7 @@
 
 #ifdef _MSC_VER
 
-#define debug_break __debugbreak
+#define breakpoint __debugbreak
 
 #else
 
@@ -138,26 +138,26 @@ __inline__ static void trap_instruction(void)
 #error "debugbreak.h is not supported on this target"
 #elif DEBUG_BREAK_IMPL == DEBUG_BREAK_USE_TRAP_INSTRUCTION
 __attribute__((always_inline))
-__inline__ static void debug_break(void)
+__inline__ static void breakpoint(void)
 {
 	trap_instruction();
 }
 #elif DEBUG_BREAK_IMPL == DEBUG_BREAK_USE_BULTIN_DEBUGTRAP
 __attribute__((always_inline))
-__inline__ static void debug_break(void)
+__inline__ static void breakpoint(void)
 {
 	__builtin_debugtrap();
 }
 #elif DEBUG_BREAK_IMPL == DEBUG_BREAK_USE_BULTIN_TRAP
 __attribute__((always_inline))
-__inline__ static void debug_break(void)
+__inline__ static void breakpoint(void)
 {
 	__builtin_trap();
 }
 #elif DEBUG_BREAK_IMPL == DEBUG_BREAK_USE_SIGTRAP
 #include <signal.h>
 __attribute__((always_inline))
-__inline__ static void debug_break(void)
+__inline__ static void breakpoint(void)
 {
 	raise(SIGTRAP);
 }
