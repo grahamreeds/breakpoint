@@ -3,7 +3,7 @@
 
 int main()
 {
-	debug_break();
+	breakpoint();
 	std::cout << "hello, world\n";
 	return 0;
 }

@@ -1,18 +1,22 @@
 # Debug Break
 
-[debugbreak.h](https://github.com/scottt/debugbreak/blob/master/debugbreak.h) allows you to put breakpoints in your C/C++ code with a call to **debug_break()**:
+This is a modification of [Scottt Debugbreak](https://github.com/scottt/debugbreak) which changes the name to match that of the 2026 addition to the C++ standard[*](https://en.cppreference.com/w/cpp/utility/breakpoint.html).
+
+[debugging.h](https://github.com/grahamreeds/breakpoint/blob/master/debugging.h) allows you to put breakpoints in your C/C++ code with a call to **breakpoint()**:
 ```C
 #include <stdio.h>
 #include "debugbreak.h"
 
 int main()
 {
-	debug_break(); /* will break into debugger */
+	breakpoint(); /* will break into debugger */
 	printf("hello world\n");
 	return 0;
 }
 ```
-* Include one header file and insert calls to `debug_break()` in the code where you wish to break into the debugger.
+I have added the functions `is_debugger_present()` and `breakpoint_if_debugging()` though these are less complete than Scott's.
+
+* Include one header file and insert calls to `breakpoint()` in the code where you wish to break into the debugger.
 * Supports GCC, Clang and MSVC.
 * Works well on ARM, AArch64, i686, x86-64, POWER and has a fallback code path for other architectures.
 * Works like the **DebugBreak()** fuction provided by [Windows](http://msdn.microsoft.com/en-us/library/ea9yy3ey.aspx) and [QNX](http://www.qnx.com/developers/docs/6.3.0SP3/neutrino/lib_ref/d/debugbreak.html).
@@ -24,11 +28,11 @@ Known Problem: if continuing execution after a debugbreak breakpoint hit doesn't
 Implementation Notes
 ================================
 
-The requirements for the **debug_break()** function are:
+The requirements for the **breakpoint()** function are:
 * Act as a compiler code motion barrier
 * Don't cause the compiler optimizers to think the code following it can be removed
 * Trigger a software breakpoint hit when executed (e.g. **SIGTRAP** on Linux)
-* GDB commands like **continue**, **next**, **step**, **stepi** must work after a **debug_break()** hit
+* GDB commands like **continue**, **next**, **step**, **stepi** must work after a **breakpoint()** hit
 
 Ideally, both GCC and Clang would provide a **__builtin_debugtrap()** that satisfies the above on all architectures and operating systems. Unfortunately, that is not the case (yet).
 GCC's [__builtin_trap()](http://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html#index-g_t_005f_005fbuiltin_005ftrap-3278) causes the optimizers to think the code follwing can be removed ([test/trap.c](https://github.com/scottt/debugbreak/blob/master/test/trap.c)):
@@ -57,14 +61,14 @@ Even after this, continuing execution in GDB doesn't work well on some GCC, GDB 
 
 On ARM, **__builtin_trap()** generates a call to **abort()**, making it even less suitable.
 
-**debug_break()** generates an **int3** instruction on i386 / x86-64 ([test/break.c](https://github.com/scottt/debugbreak/blob/master/test/break.c)):
+**breakpoint()** generates an **int3** instruction on i386 / x86-64 ([test/break.c](https://github.com/scottt/debugbreak/blob/master/test/break.c)):
 ```C
 #include <stdio.h>
 #include "debugbreak.h"
    
 int main()
 {
-	debug_break();
+	breakpoint();
 	printf("hello world\n");
 	return 0;
 }
@@ -80,11 +84,11 @@ main
 0x00000000004003de <+14>:    5a	pop    %rdx
 0x00000000004003df <+15>:    c3	retq   
 ```
-which correctly trigges **SIGTRAP** and single-stepping in GDB after a **debug_break()** hit works well.
+which correctly trigges **SIGTRAP** and single-stepping in GDB after a **breakpoint()** hit works well.
 
 Clang / LLVM also has a **__builtin_trap()** that generates **ud2** but further provides **__builtin_debugtrap()** that generates **int3** on i386 / x86-64 ([original LLVM intrinsic](http://lists.llvm.org/pipermail/llvm-commits/Week-of-Mon-20120507/142621.html), [further fixes](https://reviews.llvm.org/rL166300#96cef7d3), [Clang builtin support](https://reviews.llvm.org/rL166298)).
 
-On ARM, **debug_break()** generates **.inst 0xe7f001f0** in ARM mode and **.inst 0xde01** in Thumb mode which correctly triggers **SIGTRAP** on Linux. Unfortunately, stepping in GDB after a **debug_break()** hit doesn't work and requires a workaround like:
+On ARM, **breakpoint()** generates **.inst 0xe7f001f0** in ARM mode and **.inst 0xde01** in Thumb mode which correctly triggers **SIGTRAP** on Linux. Unfortunately, stepping in GDB after a **breakpoint()** hit doesn't work and requires a workaround like:
 ```
 (gdb) set $l = 2
 (gdb) tbreak *($pc + $l)
@@ -99,21 +103,21 @@ $ arm-none-linux-gnueabi-gdb -x debugbreak-gdb.py test/break-c++
 (gdb) run
 Program received signal SIGTRAP, Trace/breakpoint trap.
 main () at test/break-c++.cc:6
-6		debug_break();
+6		breakpoint();
 
 (gdb) debugbreak-step
 
 7		std::cout << "hello, world\n";
 ```
 
-On AArch64, **debug_break()** generates **.inst 0xd4200000**.
+On AArch64, **breakpoint()** generates **.inst 0xd4200000**.
 
-See table below for the behavior of **debug_break()** on other architecturs.
+See table below for the behavior of **breakpoint()** on other architecturs.
 
 Behavior on Different Architectures
 ----------------
 
-| Architecture       | debug_break() |
+| Architecture       | breakpoint() |
 | -------------      | ------------- |
 | x86/x86-64         | `int3`  |
 | ARM mode, 32-bit   | `.inst 0xe7f001f0`  |

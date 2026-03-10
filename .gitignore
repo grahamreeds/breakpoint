@@ -8,3 +8,4 @@ tags
 test/trap
 test/break
 test/break-c++
+test/debugger-c++

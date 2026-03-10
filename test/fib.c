@@ -9,7 +9,7 @@ int fib(int n)
 		return 1;
 	r = fib(n-1) + fib(n-2);
 	if (r == 89) {
-		debug_break();
+		breakpoint();
 	}
 	return r;
 }

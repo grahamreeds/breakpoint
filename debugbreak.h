@@ -1,4 +1,5 @@
 /* Copyright (c) 2011-2021, Scott Tsai
+ * Copyright (c) 2026, Graham Reeds
  * 
  * All rights reserved.
  * 

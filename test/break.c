@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include "debugbreak.h"
+#include "debugging.h"
 
 int main()
 {
-	debug_break();
+	breakpoint();
 	printf("hello world\n");
 	return 0;
 }
